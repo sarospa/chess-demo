@@ -14,6 +14,10 @@ public class BoardCont : MonoBehaviour
 	public GameObject blackBishop;
 	public GameObject whiteKnight;
 	public GameObject blackKnight;
+	public GameObject whiteQueen;
+	public GameObject blackQueen;
+	public GameObject whiteKing;
+	public GameObject blackKing;
 	public GameObject highlight;
 	public const float corner = -0.42f;
 	public const float squareSize = 0.12f;
@@ -52,12 +56,16 @@ public class BoardCont : MonoBehaviour
 		CreatePiece (whiteRook, 0, 0);
 		CreatePiece (whiteBishop, 1, 0);
 		CreatePiece (whiteKnight, 2, 0);
+		CreatePiece (whiteQueen, 3, 0);
+		CreatePiece (whiteKing, 4, 0);
 		CreatePiece (whiteKnight, 5, 0);
 		CreatePiece (whiteBishop, 6, 0);
 		CreatePiece (whiteRook, 7, 0);
 		CreatePiece (blackRook, 0, 7);
 		CreatePiece (blackBishop, 1, 7);
 		CreatePiece (blackKnight, 2, 7);
+		CreatePiece (blackQueen, 3, 7);
+		CreatePiece (blackKing, 4, 7);
 		CreatePiece (blackKnight, 5, 7);
 		CreatePiece (blackBishop, 6, 7);
 		CreatePiece (blackRook, 7, 7);

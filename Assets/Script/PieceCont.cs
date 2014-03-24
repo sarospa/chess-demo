@@ -188,6 +188,74 @@ public class PieceCont : MonoBehaviour {
 			TryMove (xLoc-1, yLoc-2, true);
 			TryMove (xLoc-2, yLoc-1, true);
 			break;
+		case "queen":
+			for (int i = 1; ; i++)
+			{
+				if (!TryMove (xLoc+i, yLoc, true))
+				{
+					break;
+				}
+			}
+			for (int i = 1; ; i++)
+			{
+				if (!TryMove (xLoc-i, yLoc, true))
+				{
+					break;
+				}
+			}
+			for (int i = 1; ; i++)
+			{
+				if (!TryMove (xLoc, yLoc+i, true))
+				{
+					break;
+				}
+			}
+			for (int i = 1; ; i++)
+			{
+				if (!TryMove (xLoc, yLoc-i, true))
+				{
+					break;
+				}
+			}
+			for (int i = 1; ; i++)
+			{
+				if (!TryMove (xLoc+i, yLoc+i, true))
+				{
+					break;
+				}
+			}
+			for (int i = 1; ; i++)
+			{
+				if (!TryMove (xLoc+i, yLoc-i, true))
+				{
+					break;
+				}
+			}
+			for (int i = 1; ; i++)
+			{
+				if (!TryMove (xLoc-i, yLoc+i, true))
+				{
+					break;
+				}
+			}
+			for (int i = 1; ; i++)
+			{
+				if (!TryMove (xLoc-i, yLoc-i, true))
+				{
+					break;
+				}
+			}
+			break;
+		case "king":
+			TryMove (xLoc+1, yLoc+1, true);
+			TryMove (xLoc+1, yLoc, true);
+			TryMove (xLoc+1, yLoc-1, true);
+			TryMove (xLoc, yLoc-1, true);
+			TryMove (xLoc-1, yLoc-1, true);
+			TryMove (xLoc-1, yLoc, true);
+			TryMove (xLoc-1, yLoc+1, true);
+			TryMove (xLoc, yLoc+1, true);
+			break;
 		}
 		return moves;
 	}
