@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BoardCont : MonoBehaviour
 {
@@ -7,6 +8,13 @@ public class BoardCont : MonoBehaviour
 	public GameObject blackSquare;
 	public GameObject whitePawn;
 	public GameObject blackPawn;
+	public GameObject whiteRook;
+	public GameObject blackRook;
+	public GameObject whiteBishop;
+	public GameObject blackBishop;
+	public GameObject whiteKnight;
+	public GameObject blackKnight;
+	public GameObject highlight;
 	public const float corner = -0.42f;
 	public const float squareSize = 0.12f;
 	public const float pieceScale = 0.9f;
@@ -17,6 +25,7 @@ public class BoardCont : MonoBehaviour
 	public static GameObject selectedPiece = null;
 	public static float xScale;
 	public static float yScale;
+	private List<GameObject> highlightSquares = new List<GameObject> ();
 
 	void Start ()
 	{
@@ -40,6 +49,18 @@ public class BoardCont : MonoBehaviour
 			CreatePiece (whitePawn, x, 1);
 			CreatePiece (blackPawn, x, 6);
 		}
+		CreatePiece (whiteRook, 0, 0);
+		CreatePiece (whiteBishop, 1, 0);
+		CreatePiece (whiteKnight, 2, 0);
+		CreatePiece (whiteKnight, 5, 0);
+		CreatePiece (whiteBishop, 6, 0);
+		CreatePiece (whiteRook, 7, 0);
+		CreatePiece (blackRook, 0, 7);
+		CreatePiece (blackBishop, 1, 7);
+		CreatePiece (blackKnight, 2, 7);
+		CreatePiece (blackKnight, 5, 7);
+		CreatePiece (blackBishop, 6, 7);
+		CreatePiece (blackRook, 7, 7);
 	}
 	
 	void Update () {
@@ -85,5 +106,25 @@ public class BoardCont : MonoBehaviour
 		piece.transform.localPosition = CellLoc (x, y, -2f);
 		pieces [x, y] = piece;
 		pieces [x, y].GetComponent<PieceCont> ().SetLoc (x, y);
+	}
+
+	public void PlaceHighlights (List<Vector2> moves)
+	{
+		foreach (Vector2 move in moves)
+		{
+			GameObject clone = (GameObject)Instantiate (highlight);
+			clone.transform.parent = this.transform;
+			clone.transform.localPosition = CellLoc ((int)move.x, (int)move.y, -2.5f);
+			clone.transform.localScale = new Vector3 (squareSize, squareSize, 1);
+			highlightSquares.Add (clone);
+		}
+	}
+
+	public void RemoveHighlights ()
+	{
+		foreach (GameObject clone in highlightSquares)
+		{
+			Destroy (clone);
+		}
 	}
 }
