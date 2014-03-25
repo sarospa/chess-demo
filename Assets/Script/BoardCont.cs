@@ -135,4 +135,29 @@ public class BoardCont : MonoBehaviour
 			Destroy (clone);
 		}
 	}
+
+	// If any elements in additional are missing from target, they're added into it.
+	public static void MergeLists (List<Vector2> target, List<Vector2> additional)
+	{
+		foreach (Vector2 v in additional)
+		{
+			if (!target.Contains (v))
+			{
+				target.Add (v);
+			}
+		}
+	}
+
+	// If any elements are in both target and subtraction, they're removed from target.
+	public static void IntersectLists (List<Vector2> target, List<Vector2> intersection)
+	{
+		for (int i = 0; i < target.Count; i++)
+		{
+			if (!intersection.Contains (target[i]))
+			{
+				target.Remove (target[i]);
+				i--;
+			}
+		}
+	}
 }

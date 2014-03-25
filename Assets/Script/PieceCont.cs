@@ -70,7 +70,12 @@ public class PieceCont : MonoBehaviour {
 		}
 	}
 
-	string CheckSpace (int x, int y)
+	public Vector2 GetLoc ()
+	{
+		return new Vector2 (xLoc, yLoc);
+	}
+
+	public string CheckSpace (int x, int y)
 	{
 		if (x < 0 || x >= BoardCont.boardSize || y < 0 || y >= BoardCont.boardSize)
 		{
@@ -92,8 +97,13 @@ public class PieceCont : MonoBehaviour {
 
 	public List<Vector2> CheckValidMoves ()
 	{
-		moves = new List<Vector2> ();
-		switch (pieceType)
+		return CheckValidMoves (pieceType);
+	}
+
+	public List<Vector2> CheckValidMoves (string type)
+	{
+		List<Vector2> nextMoves = new List<Vector2> ();
+		switch (type)
 		{
 		case "pawn":
 			int dir;
@@ -105,44 +115,44 @@ public class PieceCont : MonoBehaviour {
 			{
 				dir = -1;
 			}
-			if (TryMove (xLoc, yLoc+dir, false) && !moved)
+			if (TryMove (nextMoves, xLoc, yLoc+dir, false) && !moved)
 			{
-				TryMove (xLoc, yLoc+dir*2, false);
+				TryMove (nextMoves, xLoc, yLoc+dir*2, false);
 			}
 			if (CheckSpace (xLoc+1, yLoc+dir) == "enemy")
 			{
-				moves.Add (new Vector2 (xLoc+1, yLoc+dir));
+				nextMoves.Add (new Vector2 (xLoc+1, yLoc+dir));
 			}
 			if (CheckSpace (xLoc-1, yLoc+dir) == "enemy")
 			{
-				moves.Add (new Vector2 (xLoc-1, yLoc+dir));
+				nextMoves.Add (new Vector2 (xLoc-1, yLoc+dir));
 			}
 			break;
 		case "rook":
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (xLoc+i, yLoc, true))
+				if (!TryMove (nextMoves, xLoc+i, yLoc, true))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (xLoc-i, yLoc, true))
+				if (!TryMove (nextMoves, xLoc-i, yLoc, true))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (xLoc, yLoc+i, true))
+				if (!TryMove (nextMoves, xLoc, yLoc+i, true))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (xLoc, yLoc-i, true))
+				if (!TryMove (nextMoves, xLoc, yLoc-i, true))
 				{
 					break;
 				}
@@ -151,118 +161,79 @@ public class PieceCont : MonoBehaviour {
 		case "bishop":
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (xLoc+i, yLoc+i, true))
+				if (!TryMove (nextMoves, xLoc+i, yLoc+i, true))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (xLoc+i, yLoc-i, true))
+				if (!TryMove (nextMoves, xLoc+i, yLoc-i, true))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (xLoc-i, yLoc+i, true))
+				if (!TryMove (nextMoves, xLoc-i, yLoc+i, true))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (xLoc-i, yLoc-i, true))
+				if (!TryMove (nextMoves, xLoc-i, yLoc-i, true))
 				{
 					break;
 				}
 			}
 			break;
 		case "knight":
-			TryMove (xLoc+1, yLoc+2, true);
-			TryMove (xLoc+2, yLoc+1, true);
-			TryMove (xLoc+1, yLoc-2, true);
-			TryMove (xLoc+2, yLoc-1, true);
-			TryMove (xLoc-1, yLoc+2, true);
-			TryMove (xLoc-2, yLoc+1, true);
-			TryMove (xLoc-1, yLoc-2, true);
-			TryMove (xLoc-2, yLoc-1, true);
+			TryMove (nextMoves, xLoc+1, yLoc+2, true);
+			TryMove (nextMoves, xLoc+2, yLoc+1, true);
+			TryMove (nextMoves, xLoc+1, yLoc-2, true);
+			TryMove (nextMoves, xLoc+2, yLoc-1, true);
+			TryMove (nextMoves, xLoc-1, yLoc+2, true);
+			TryMove (nextMoves, xLoc-2, yLoc+1, true);
+			TryMove (nextMoves, xLoc-1, yLoc-2, true);
+			TryMove (nextMoves, xLoc-2, yLoc-1, true);
 			break;
 		case "queen":
-			for (int i = 1; ; i++)
-			{
-				if (!TryMove (xLoc+i, yLoc, true))
-				{
-					break;
-				}
-			}
-			for (int i = 1; ; i++)
-			{
-				if (!TryMove (xLoc-i, yLoc, true))
-				{
-					break;
-				}
-			}
-			for (int i = 1; ; i++)
-			{
-				if (!TryMove (xLoc, yLoc+i, true))
-				{
-					break;
-				}
-			}
-			for (int i = 1; ; i++)
-			{
-				if (!TryMove (xLoc, yLoc-i, true))
-				{
-					break;
-				}
-			}
-			for (int i = 1; ; i++)
-			{
-				if (!TryMove (xLoc+i, yLoc+i, true))
-				{
-					break;
-				}
-			}
-			for (int i = 1; ; i++)
-			{
-				if (!TryMove (xLoc+i, yLoc-i, true))
-				{
-					break;
-				}
-			}
-			for (int i = 1; ; i++)
-			{
-				if (!TryMove (xLoc-i, yLoc+i, true))
-				{
-					break;
-				}
-			}
-			for (int i = 1; ; i++)
-			{
-				if (!TryMove (xLoc-i, yLoc-i, true))
-				{
-					break;
-				}
-			}
+			nextMoves = CheckValidMoves ("rook");
+			BoardCont.MergeLists (nextMoves, CheckValidMoves ("bishop"));
 			break;
 		case "king":
-			TryMove (xLoc+1, yLoc+1, true);
-			TryMove (xLoc+1, yLoc, true);
-			TryMove (xLoc+1, yLoc-1, true);
-			TryMove (xLoc, yLoc-1, true);
-			TryMove (xLoc-1, yLoc-1, true);
-			TryMove (xLoc-1, yLoc, true);
-			TryMove (xLoc-1, yLoc+1, true);
-			TryMove (xLoc, yLoc+1, true);
+			TryMove (nextMoves, xLoc+1, yLoc+1, true);
+			TryMove (nextMoves, xLoc+1, yLoc, true);
+			TryMove (nextMoves, xLoc+1, yLoc-1, true);
+			TryMove (nextMoves, xLoc, yLoc-1, true);
+			TryMove (nextMoves, xLoc-1, yLoc-1, true);
+			TryMove (nextMoves, xLoc-1, yLoc, true);
+			TryMove (nextMoves, xLoc-1, yLoc+1, true);
+			TryMove (nextMoves, xLoc, yLoc+1, true);
 			break;
 		}
-		return moves;
+		GameObject[] kings = GameObject.FindGameObjectsWithTag ("King");
+		//Debug.Log (kings);
+		BoardCont.pieces[xLoc, yLoc] = null;
+		foreach (GameObject king in kings)
+		{
+			if (king.GetComponent<PieceCont> ().color == this.color)
+			{
+				List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats();
+				foreach (List<Vector2> threat in threats)
+				{
+					BoardCont.IntersectLists (nextMoves, threat);
+				}
+			}
+		}
+		BoardCont.pieces[xLoc, yLoc] = this.gameObject;
+		return nextMoves;
 	}
 
 	// Returns true if the space is empy, and false if it is invalid or occupied.
 	// If capture is true and the space is occupied by an enemy, it returns false but still adds the move to the valid list.
-	private bool TryMove (int x, int y, bool capture)
+	private bool TryMove (List<Vector2> list, int x, int y, bool capture)
 	{
 		string cell = CheckSpace (x, y);
 		if (cell == "invalid" || cell == "ally")
@@ -273,11 +244,11 @@ public class PieceCont : MonoBehaviour {
 		{
 			if (capture)
 			{
-				moves.Add (new Vector2 (x, y));
+				list.Add (new Vector2 (x, y));
 			}
 			return false;
 		}
-		moves.Add (new Vector2 (x, y));
+		list.Add (new Vector2 (x, y));
 		return true;
 	}
 }
