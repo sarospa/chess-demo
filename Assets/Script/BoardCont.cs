@@ -33,6 +33,10 @@ public class BoardCont : MonoBehaviour
 
 	void Start ()
 	{
+		GameObject turnText = GameObject.FindGameObjectWithTag ("TurnText");
+		turnText.guiText.text = "White's Turn";
+		turnText.transform.position = new Vector3 (0.02f, 0.02f, 0);
+		turnText.guiText.anchor = TextAnchor.LowerLeft;
 		pieces = new GameObject[boardSize,boardSize];
 		for (int x = 0; x < boardSize; x++)
 		{
