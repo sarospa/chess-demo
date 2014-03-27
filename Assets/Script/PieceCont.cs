@@ -22,7 +22,23 @@ public class PieceCont : MonoBehaviour {
 	{
 		if ((color == "white") == BoardCont.whiteTurn)
 		{
-			moves = CheckValidMoves ();
+			moves = CheckValidMoves (false);
+			if (this.pieceType == "king")
+			{
+				BoardCont.pieces[xLoc, yLoc] = null;
+				foreach (GameObject piece in BoardCont.pieces)
+				{
+					if (piece != null)
+					{
+						PieceCont otherCont = piece.GetComponent<PieceCont> ();
+						if (otherCont.color != this.color)
+						{
+							BoardCont.SubtractLists (moves, otherCont.CheckValidMoves (true));
+						}
+					}
+				}
+				BoardCont.pieces[xLoc, yLoc] = this.gameObject;
+			}
 			board.GetComponent<BoardCont> ().PlaceHighlights (moves);
 			xLoc = (int)((this.gameObject.transform.localPosition.x + BoardCont.squareSize * BoardCont.boardSize / 2) / BoardCont.squareSize);
 			yLoc = (int)((this.gameObject.transform.localPosition.y + BoardCont.squareSize * BoardCont.boardSize / 2) / BoardCont.squareSize);
@@ -95,12 +111,15 @@ public class PieceCont : MonoBehaviour {
 		}
 	}
 
-	public List<Vector2> CheckValidMoves ()
+	public List<Vector2> CheckValidMoves (bool protect)
 	{
-		return CheckValidMoves (pieceType);
+		return CheckValidMoves (pieceType, protect);
 	}
 
-	public List<Vector2> CheckValidMoves (string type)
+	// Protect is used to check which squares are protected by the piece.
+	// If protect is true, spaces with allied pieces and empty spaces the piece
+	// could capture to are included, while non-capturing moves are left out.
+	public List<Vector2> CheckValidMoves (string type, bool protect)
 	{
 		List<Vector2> nextMoves = new List<Vector2> ();
 		switch (type)
@@ -115,15 +134,17 @@ public class PieceCont : MonoBehaviour {
 			{
 				dir = -1;
 			}
-			if (TryMove (nextMoves, xLoc, yLoc+dir, false) && !moved)
+			if (TryMove (nextMoves, xLoc, yLoc+dir, false, protect) && !moved)
 			{
-				TryMove (nextMoves, xLoc, yLoc+dir*2, false);
+				TryMove (nextMoves, xLoc, yLoc+dir*2, false, protect);
 			}
-			if (CheckSpace (xLoc+1, yLoc+dir) == "enemy")
+			string cell = CheckSpace (xLoc+1, yLoc+dir);
+			if (cell == "enemy" || ((cell == "empty" || cell == "ally") && protect))
 			{
 				nextMoves.Add (new Vector2 (xLoc+1, yLoc+dir));
 			}
-			if (CheckSpace (xLoc-1, yLoc+dir) == "enemy")
+			cell = CheckSpace (xLoc-1, yLoc+dir);
+			if (cell == "enemy" || ((cell == "empty" || cell == "ally") && protect))
 			{
 				nextMoves.Add (new Vector2 (xLoc-1, yLoc+dir));
 			}
@@ -131,28 +152,28 @@ public class PieceCont : MonoBehaviour {
 		case "rook":
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (nextMoves, xLoc+i, yLoc, true))
+				if (!TryMove (nextMoves, xLoc+i, yLoc, true, protect))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (nextMoves, xLoc-i, yLoc, true))
+				if (!TryMove (nextMoves, xLoc-i, yLoc, true, protect))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (nextMoves, xLoc, yLoc+i, true))
+				if (!TryMove (nextMoves, xLoc, yLoc+i, true, protect))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (nextMoves, xLoc, yLoc-i, true))
+				if (!TryMove (nextMoves, xLoc, yLoc-i, true, protect))
 				{
 					break;
 				}
@@ -161,86 +182,90 @@ public class PieceCont : MonoBehaviour {
 		case "bishop":
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (nextMoves, xLoc+i, yLoc+i, true))
+				if (!TryMove (nextMoves, xLoc+i, yLoc+i, true, protect))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (nextMoves, xLoc+i, yLoc-i, true))
+				if (!TryMove (nextMoves, xLoc+i, yLoc-i, true, protect))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (nextMoves, xLoc-i, yLoc+i, true))
+				if (!TryMove (nextMoves, xLoc-i, yLoc+i, true, protect))
 				{
 					break;
 				}
 			}
 			for (int i = 1; ; i++)
 			{
-				if (!TryMove (nextMoves, xLoc-i, yLoc-i, true))
+				if (!TryMove (nextMoves, xLoc-i, yLoc-i, true, protect))
 				{
 					break;
 				}
 			}
 			break;
 		case "knight":
-			TryMove (nextMoves, xLoc+1, yLoc+2, true);
-			TryMove (nextMoves, xLoc+2, yLoc+1, true);
-			TryMove (nextMoves, xLoc+1, yLoc-2, true);
-			TryMove (nextMoves, xLoc+2, yLoc-1, true);
-			TryMove (nextMoves, xLoc-1, yLoc+2, true);
-			TryMove (nextMoves, xLoc-2, yLoc+1, true);
-			TryMove (nextMoves, xLoc-1, yLoc-2, true);
-			TryMove (nextMoves, xLoc-2, yLoc-1, true);
+			TryMove (nextMoves, xLoc+1, yLoc+2, true, protect);
+			TryMove (nextMoves, xLoc+2, yLoc+1, true, protect);
+			TryMove (nextMoves, xLoc+1, yLoc-2, true, protect);
+			TryMove (nextMoves, xLoc+2, yLoc-1, true, protect);
+			TryMove (nextMoves, xLoc-1, yLoc+2, true, protect);
+			TryMove (nextMoves, xLoc-2, yLoc+1, true, protect);
+			TryMove (nextMoves, xLoc-1, yLoc-2, true, protect);
+			TryMove (nextMoves, xLoc-2, yLoc-1, true, protect);
 			break;
 		case "queen":
-			nextMoves = CheckValidMoves ("rook");
-			BoardCont.MergeLists (nextMoves, CheckValidMoves ("bishop"));
+			nextMoves = CheckValidMoves ("rook", protect);
+			BoardCont.MergeLists (nextMoves, CheckValidMoves ("bishop", protect));
 			break;
 		case "king":
-			TryMove (nextMoves, xLoc+1, yLoc+1, true);
-			TryMove (nextMoves, xLoc+1, yLoc, true);
-			TryMove (nextMoves, xLoc+1, yLoc-1, true);
-			TryMove (nextMoves, xLoc, yLoc-1, true);
-			TryMove (nextMoves, xLoc-1, yLoc-1, true);
-			TryMove (nextMoves, xLoc-1, yLoc, true);
-			TryMove (nextMoves, xLoc-1, yLoc+1, true);
-			TryMove (nextMoves, xLoc, yLoc+1, true);
+			TryMove (nextMoves, xLoc+1, yLoc+1, true, protect);
+			TryMove (nextMoves, xLoc+1, yLoc, true, protect);
+			TryMove (nextMoves, xLoc+1, yLoc-1, true, protect);
+			TryMove (nextMoves, xLoc, yLoc-1, true, protect);
+			TryMove (nextMoves, xLoc-1, yLoc-1, true, protect);
+			TryMove (nextMoves, xLoc-1, yLoc, true, protect);
+			TryMove (nextMoves, xLoc-1, yLoc+1, true, protect);
+			TryMove (nextMoves, xLoc, yLoc+1, true, protect);
 			break;
 		}
-		GameObject[] kings = GameObject.FindGameObjectsWithTag ("King");
-		//Debug.Log (kings);
-		BoardCont.pieces[xLoc, yLoc] = null;
-		foreach (GameObject king in kings)
+		if (this.pieceType != "king")
 		{
-			if (king.GetComponent<PieceCont> ().color == this.color)
+			GameObject[] kings = GameObject.FindGameObjectsWithTag ("King");
+			//Debug.Log (kings);
+			BoardCont.pieces[xLoc, yLoc] = null;
+			foreach (GameObject king in kings)
 			{
-				List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats();
-				foreach (List<Vector2> threat in threats)
+				if (king.GetComponent<PieceCont> ().color == this.color)
 				{
-					BoardCont.IntersectLists (nextMoves, threat);
+					List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats();
+					foreach (List<Vector2> threat in threats)
+					{
+						BoardCont.IntersectLists (nextMoves, threat);
+					}
 				}
 			}
+			BoardCont.pieces[xLoc, yLoc] = this.gameObject;
 		}
-		BoardCont.pieces[xLoc, yLoc] = this.gameObject;
 		return nextMoves;
 	}
 
 	// Returns true if the space is empy, and false if it is invalid or occupied.
 	// If capture is true and the space is occupied by an enemy, it returns false but still adds the move to the valid list.
-	private bool TryMove (List<Vector2> list, int x, int y, bool capture)
+	// If protect is also true, does the same for allies.
+	private bool TryMove (List<Vector2> list, int x, int y, bool capture, bool protect)
 	{
 		string cell = CheckSpace (x, y);
-		if (cell == "invalid" || cell == "ally")
+		if (cell == "invalid")
 		{
 			return false;
 		}
-		if (cell == "enemy")
+		else if (cell == "enemy")
 		{
 			if (capture)
 			{
@@ -248,7 +273,21 @@ public class PieceCont : MonoBehaviour {
 			}
 			return false;
 		}
-		list.Add (new Vector2 (x, y));
-		return true;
+		else if (cell == "ally")
+		{
+			if (capture && protect)
+			{
+				list.Add (new Vector2 (x, y));
+			}
+			return false;
+		}
+		else // if (cell == "empty")
+		{
+			if (capture || !protect)
+			{
+				list.Add (new Vector2 (x, y));
+			}
+			return true;
+		}
 	}
 }

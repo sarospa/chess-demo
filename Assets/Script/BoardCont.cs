@@ -148,7 +148,7 @@ public class BoardCont : MonoBehaviour
 		}
 	}
 
-	// If any elements are in both target and subtraction, they're removed from target.
+	// If any elements are in target, but missing from intersection, they're removed from target.
 	public static void IntersectLists (List<Vector2> target, List<Vector2> intersection)
 	{
 		for (int i = 0; i < target.Count; i++)
@@ -157,6 +157,18 @@ public class BoardCont : MonoBehaviour
 			{
 				target.Remove (target[i]);
 				i--;
+			}
+		}
+	}
+	
+	// If any elements are in both target and subtraction, they are removed from target.
+	public static void SubtractLists (List<Vector2> target, List<Vector2> subtraction)
+	{
+		foreach (Vector2 v in subtraction)
+		{
+			if (target.Contains (v))
+			{
+				target.Remove (v);
 			}
 		}
 	}
