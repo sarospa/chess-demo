@@ -10,6 +10,7 @@ public class PieceCont : MonoBehaviour {
 	public string pieceType;
 	public string color;
 	private bool moved = false;
+	private bool passantVulnerable = false;
 	private List<Vector2> moves = new List<Vector2> ();
 	private GameObject board;
 
@@ -97,12 +98,38 @@ public class PieceCont : MonoBehaviour {
 		{
 			int x = Mathf.FloorToInt ((this.gameObject.transform.localPosition.x + BoardCont.squareSize * 4) / BoardCont.squareSize);
 			int y = Mathf.FloorToInt ((this.gameObject.transform.localPosition.y + BoardCont.squareSize * 4) / BoardCont.squareSize);
-			//Debug.Log (xLoc + "," + yLoc + " to " + x + "," + y);
+			int dir;
+			if (color == "white")
+			{
+				dir = 1;
+			}
+			else
+			{
+				dir = -1;
+			}
 			if (moves.Contains (new Vector2 (x, y)))
 			{
+				foreach (GameObject piece in BoardCont.pieces)
+				{
+					if (piece != null)
+					{
+						PieceCont otherCont = piece.GetComponent<PieceCont> ();
+						otherCont.passantVulnerable = false;
+					}
+				}
 				if (BoardCont.pieces[x, y] != null)
 				{
 					Destroy (BoardCont.pieces[x, y]);
+				}
+				// Check if pawn is now vulnerable to en passant.
+				if (this.pieceType == "pawn" && Mathf.Abs (y - yLoc) == 2)
+				{
+					this.passantVulnerable = true;
+				}
+				// If en passant was performed, destroy the enemy pawn.
+				if (this.pieceType == "pawn" && Mathf.Abs (x - xLoc) == 1 && Mathf.Abs (y - yLoc) == 1 && CheckSpace (x, y) == "empty")
+				{
+					Destroy (BoardCont.pieces[x, y-dir]);
 				}
 				// Moves rook on queen side castle.
 				if (x == xLoc-2 && y == yLoc && this.pieceType == "king")
@@ -192,18 +219,20 @@ public class PieceCont : MonoBehaviour {
 	public List<Vector2> CheckValidMoves (string type, bool protect)
 	{
 		List<Vector2> nextMoves = new List<Vector2> ();
+		bool enPassantLeft = false;
+		bool enPassantRight = false;
+		int dir;
+		if (color == "white")
+		{
+			dir = 1;
+		}
+		else
+		{
+			dir = -1;
+		}
 		switch (type)
 		{
 		case "pawn":
-			int dir;
-			if (color == "white")
-			{
-				dir = 1;
-			}
-			else
-			{
-				dir = -1;
-			}
 			if (TryMove (nextMoves, xLoc, yLoc+dir, false, protect) && !moved)
 			{
 				TryMove (nextMoves, xLoc, yLoc+dir*2, false, protect);
@@ -217,6 +246,27 @@ public class PieceCont : MonoBehaviour {
 			if (cell == "enemy" || ((cell == "empty" || cell == "ally") && protect))
 			{
 				nextMoves.Add (new Vector2 (xLoc-1, yLoc+dir));
+			}
+			// Checks for en passant.
+			cell = CheckSpace (xLoc-1, yLoc);
+			if (cell == "enemy")
+			{
+				PieceCont otherCont = BoardCont.pieces[xLoc-1, yLoc].GetComponent<PieceCont> ();
+				if (otherCont.passantVulnerable)
+				{
+					nextMoves.Add (new Vector2 (xLoc-1, yLoc+dir));
+					enPassantLeft = true;
+				}
+			}
+			cell = CheckSpace (xLoc+1, yLoc);
+			if (cell == "enemy")
+			{
+				PieceCont otherCont = BoardCont.pieces[xLoc+1, yLoc].GetComponent<PieceCont> ();
+				if (otherCont.passantVulnerable)
+				{
+					nextMoves.Add (new Vector2 (xLoc+1, yLoc+dir));
+					enPassantRight = true;
+				}
 			}
 			break;
 		case "rook":
@@ -307,7 +357,6 @@ public class PieceCont : MonoBehaviour {
 		if (this.pieceType != "king")
 		{
 			GameObject[] kings = GameObject.FindGameObjectsWithTag ("King");
-			//Debug.Log (kings);
 			BoardCont.pieces[xLoc, yLoc] = null;
 			foreach (GameObject king in kings)
 			{
@@ -319,6 +368,52 @@ public class PieceCont : MonoBehaviour {
 						BoardCont.IntersectLists (nextMoves, threat);
 					}
 				}
+			}
+			if (enPassantLeft)
+			{
+				GameObject temp = BoardCont.pieces[xLoc-1, yLoc];
+				BoardCont.pieces[xLoc-1, yLoc] = null;
+				List<Vector2> victimSpot = new List<Vector2> ();
+				victimSpot.Add (new Vector2 (xLoc-1, yLoc));
+				foreach (GameObject king in kings)
+				{
+					if (king.GetComponent<PieceCont> ().color == this.color)
+					{
+						List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats();
+						foreach (List<Vector2> threat in threats)
+						{
+							BoardCont.SubtractLists (victimSpot, threat);
+						}
+					}
+				}
+				if (victimSpot.Count == 0)
+				{
+					nextMoves.Remove (new Vector2 (xLoc-1, yLoc+dir));
+				}
+				BoardCont.pieces[xLoc-1, yLoc] = temp;
+			}
+			if (enPassantRight)
+			{
+				GameObject temp = BoardCont.pieces[xLoc+1, yLoc];
+				BoardCont.pieces[xLoc+1, yLoc] = null;
+				List<Vector2> victimSpot = new List<Vector2> ();
+				victimSpot.Add (new Vector2 (xLoc+1, yLoc));
+				foreach (GameObject king in kings)
+				{
+					if (king.GetComponent<PieceCont> ().color == this.color)
+					{
+						List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats();
+						foreach (List<Vector2> threat in threats)
+						{
+							BoardCont.SubtractLists (victimSpot, threat);
+						}
+					}
+				}
+				if (victimSpot.Count == 0)
+				{
+					nextMoves.Remove (new Vector2 (xLoc+1, yLoc+dir));
+				}
+				BoardCont.pieces[xLoc+1, yLoc] = temp;
 			}
 			BoardCont.pieces[xLoc, yLoc] = this.gameObject;
 		}
