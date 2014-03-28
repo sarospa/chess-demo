@@ -21,67 +21,17 @@ public class PieceCont : MonoBehaviour {
 
 	void OnMouseDown ()
 	{
+		if (BoardCont.gameOver)
+		{
+			return;
+		}
 		if ((color == "white") == BoardCont.whiteTurn)
 		{
 			moves = CheckValidMoves (false);
 			// Enforces the king not moving into check and implements castling
 			if (this.pieceType == "king")
 			{
-				List<Vector2> castleLeft = new List<Vector2> ();
-				List<Vector2> castleRight = new List<Vector2> ();
-				if (!this.moved)
-				{
-					string cell1 = CheckSpace (xLoc-1, yLoc);
-					string cell2 = CheckSpace (xLoc-2, yLoc);
-					string cell3 = CheckSpace (xLoc-3, yLoc);
-					string cell4 = CheckSpace (xLoc-4, yLoc);
-					if (cell1 == "empty" && cell2 == "empty" && cell3 == "empty" && cell4 == "ally")
-					{
-						PieceCont otherCont = BoardCont.pieces[xLoc-4, yLoc].GetComponent<PieceCont> ();
-						if (otherCont.pieceType == "rook" && !otherCont.moved)
-						{
-							castleLeft.Add (new Vector2 (xLoc, yLoc));
-							castleLeft.Add (new Vector2 (xLoc-1, yLoc));
-							castleLeft.Add (new Vector2 (xLoc-2, yLoc));
-						}
-					}
-					cell1 = CheckSpace (xLoc+1, yLoc);
-					cell2 = CheckSpace (xLoc+2, yLoc);
-					cell3 = CheckSpace (xLoc+3, yLoc);
-					if (cell1 == "empty" && cell2 == "empty" && cell3 == "ally")
-					{
-						PieceCont otherCont = BoardCont.pieces[xLoc+3, yLoc].GetComponent<PieceCont> ();
-						if (otherCont.pieceType == "rook" && !otherCont.moved)
-						{
-							castleRight.Add (new Vector2 (xLoc, yLoc));
-							castleRight.Add (new Vector2 (xLoc+1, yLoc));
-							castleRight.Add (new Vector2 (xLoc+2, yLoc));
-						}
-					}
-				}
-				BoardCont.pieces[xLoc, yLoc] = null;
-				foreach (GameObject piece in BoardCont.pieces)
-				{
-					if (piece != null)
-					{
-						PieceCont otherCont = piece.GetComponent<PieceCont> ();
-						if (otherCont.color != this.color)
-						{
-							BoardCont.SubtractLists (moves, otherCont.CheckValidMoves (true));
-							BoardCont.SubtractLists (castleLeft, otherCont.CheckValidMoves (true));
-							BoardCont.SubtractLists (castleRight, otherCont.CheckValidMoves (true));
-						}
-					}
-				}
-				if (castleLeft.Count == 3)
-				{
-					moves.Add (new Vector2 (xLoc-2, yLoc));
-				}
-				if (castleRight.Count == 3)
-				{
-					moves.Add (new Vector2 (xLoc+2, yLoc));
-				}
-				BoardCont.pieces[xLoc, yLoc] = this.gameObject;
+				this.CheckKingMoves (moves);
 			}
 			board.GetComponent<BoardCont> ().PlaceHighlights (moves);
 			xLoc = (int)((this.gameObject.transform.localPosition.x + BoardCont.squareSize * BoardCont.boardSize / 2) / BoardCont.squareSize);
@@ -94,6 +44,10 @@ public class PieceCont : MonoBehaviour {
 
 	void OnMouseUp ()
 	{
+		if (BoardCont.gameOver)
+		{
+			return;
+		}
 		if (selected)
 		{
 			int x = Mathf.FloorToInt ((this.gameObject.transform.localPosition.x + BoardCont.squareSize * 4) / BoardCont.squareSize);
@@ -148,6 +102,17 @@ public class PieceCont : MonoBehaviour {
 				BoardCont.PlacePiece (this.gameObject, x, y);
 				moved = true;
 				BoardCont.whiteTurn = (color != "white");
+				GameObject[] kings = GameObject.FindGameObjectsWithTag ("King");
+				foreach (GameObject king in kings)
+				{
+					if (BoardCont.whiteTurn == (king.GetComponent<PieceCont> ().color == "white"))
+					{
+						if (BoardCont.isCheckmated (king))
+						{
+							BoardCont.gameOver = true;
+						}
+					}
+				}
 				if (BoardCont.whiteTurn)
 				{
 					GameObject turnText = GameObject.FindGameObjectWithTag ("TurnText");
@@ -366,9 +331,19 @@ public class PieceCont : MonoBehaviour {
 					foreach (List<Vector2> threat in threats)
 					{
 						BoardCont.IntersectLists (nextMoves, threat);
+						if (enPassantLeft && threat.Contains (new Vector2 (xLoc-1, yLoc)))
+						{
+							nextMoves.Add (new Vector2 (xLoc-1, yLoc+dir));
+						}
+						else if (enPassantRight && threat.Contains (new Vector2 (xLoc+1, yLoc)))
+						{
+							nextMoves.Add (new Vector2 (xLoc+1, yLoc+dir));
+						}
 					}
 				}
 			}
+			// Check for a rare case where the removal of a pawn captured en passant
+			// would illegally put your own king in check.
 			if (enPassantLeft)
 			{
 				GameObject temp = BoardCont.pieces[xLoc-1, yLoc];
@@ -454,5 +429,64 @@ public class PieceCont : MonoBehaviour {
 			}
 			return true;
 		}
+	}
+	
+	public void CheckKingMoves (List<Vector2> moves)
+	{
+		List<Vector2> castleLeft = new List<Vector2> ();
+		List<Vector2> castleRight = new List<Vector2> ();
+		if (!this.moved)
+		{
+			string cell1 = CheckSpace (xLoc-1, yLoc);
+			string cell2 = CheckSpace (xLoc-2, yLoc);
+			string cell3 = CheckSpace (xLoc-3, yLoc);
+			string cell4 = CheckSpace (xLoc-4, yLoc);
+			if (cell1 == "empty" && cell2 == "empty" && cell3 == "empty" && cell4 == "ally")
+			{
+				PieceCont otherCont = BoardCont.pieces[xLoc-4, yLoc].GetComponent<PieceCont> ();
+				if (otherCont.pieceType == "rook" && !otherCont.moved)
+				{
+					castleLeft.Add (new Vector2 (xLoc, yLoc));
+					castleLeft.Add (new Vector2 (xLoc-1, yLoc));
+					castleLeft.Add (new Vector2 (xLoc-2, yLoc));
+				}
+			}
+			cell1 = CheckSpace (xLoc+1, yLoc);
+			cell2 = CheckSpace (xLoc+2, yLoc);
+			cell3 = CheckSpace (xLoc+3, yLoc);
+			if (cell1 == "empty" && cell2 == "empty" && cell3 == "ally")
+			{
+				PieceCont otherCont = BoardCont.pieces[xLoc+3, yLoc].GetComponent<PieceCont> ();
+				if (otherCont.pieceType == "rook" && !otherCont.moved)
+				{
+					castleRight.Add (new Vector2 (xLoc, yLoc));
+					castleRight.Add (new Vector2 (xLoc+1, yLoc));
+					castleRight.Add (new Vector2 (xLoc+2, yLoc));
+				}
+			}
+		}
+		BoardCont.pieces[xLoc, yLoc] = null;
+		foreach (GameObject piece in BoardCont.pieces)
+		{
+			if (piece != null)
+			{
+				PieceCont otherCont = piece.GetComponent<PieceCont> ();
+				if (otherCont.color != this.color)
+				{
+					BoardCont.SubtractLists (moves, otherCont.CheckValidMoves (true));
+					BoardCont.SubtractLists (castleLeft, otherCont.CheckValidMoves (true));
+					BoardCont.SubtractLists (castleRight, otherCont.CheckValidMoves (true));
+				}
+			}
+		}
+		if (castleLeft.Count == 3)
+		{
+			moves.Add (new Vector2 (xLoc-2, yLoc));
+		}
+		if (castleRight.Count == 3)
+		{
+			moves.Add (new Vector2 (xLoc+2, yLoc));
+		}
+		BoardCont.pieces[xLoc, yLoc] = this.gameObject;
 	}
 }

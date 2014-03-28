@@ -1,9 +1,10 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Script\PieceCont.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Script\BoardCont.cs">
     <Files>
-      <File FileName="Assets\Script\BoardCont.cs" Line="60" Column="33" />
-      <File FileName="Assets\Script\PieceCont.cs" Line="257" Column="33" />
+      <File FileName="Assets\Script\BoardCont.cs" Line="41" Column="9" />
+      <File FileName="Assets\Script\PieceCont.cs" Line="112" Column="34" />
+      <File FileName="Assets\Script\CheckAnalysis.cs" Line="21" Column="27" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

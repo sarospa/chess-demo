@@ -25,6 +25,7 @@ public class BoardCont : MonoBehaviour
 	public const int boardSize = 8;
 
 	public static bool whiteTurn = true;
+	public static bool gameOver = false;
 	public static GameObject[,] pieces;
 	public static GameObject selectedPiece = null;
 	public static float xScale;
@@ -33,11 +34,20 @@ public class BoardCont : MonoBehaviour
 
 	void Start ()
 	{
+		BoardCont.whiteTurn = true;
+		BoardCont.gameOver = false;
+		BoardCont.selectedPiece = null;
+		BoardCont.pieces = new GameObject[boardSize,boardSize];
+		BoardCont.xScale = (float)Screen.width / Mathf.Max (new int[2] {Screen.width, Screen.height}) * Camera.main.orthographicSize * 2;
+		BoardCont.yScale = (float)Screen.height / Mathf.Max (new int[2] {Screen.width, Screen.height}) * Camera.main.orthographicSize * 2;
 		GameObject turnText = GameObject.FindGameObjectWithTag ("TurnText");
+		GameObject restartText = GameObject.FindGameObjectWithTag ("RestartText");
+		GameObject gameOverText = GameObject.FindGameObjectWithTag ("GameOverText");
 		turnText.guiText.text = "White's Turn";
 		turnText.transform.position = new Vector3 (0.02f, 0.02f, 0);
 		turnText.guiText.anchor = TextAnchor.LowerLeft;
-		pieces = new GameObject[boardSize,boardSize];
+		restartText.guiText.text = "";
+		gameOverText.guiText.text = "";
 		for (int x = 0; x < boardSize; x++)
 		{
 			for (int y = 0; y < boardSize; y++)
@@ -76,8 +86,6 @@ public class BoardCont : MonoBehaviour
 	}
 	
 	void Update () {
-		xScale = (float)Screen.width / Mathf.Max (new int[2] {Screen.width, Screen.height}) * Camera.main.orthographicSize * 2;
-		yScale = (float)Screen.height / Mathf.Max (new int[2] {Screen.width, Screen.height}) * Camera.main.orthographicSize * 2;
 		if (selectedPiece != null)
 		{
 			selectedPiece.transform.position = new Vector3
@@ -86,6 +94,24 @@ public class BoardCont : MonoBehaviour
 				(Input.mousePosition.y - Screen.height / 2) / Screen.height * yScale,
 				-3
 			);
+		}
+		if (BoardCont.gameOver)
+		{
+			GameObject restartText = GameObject.FindGameObjectWithTag ("RestartText");
+			GameObject gameOverText = GameObject.FindGameObjectWithTag ("GameOverText");
+			restartText.guiText.text = "Press any key to restart.";
+			if (BoardCont.whiteTurn)
+			{
+				gameOverText.guiText.text = "Checkmate! Black wins.";
+			}
+			else
+			{
+				gameOverText.guiText.text = "Checkmate! White wins.";
+			}
+			if (Input.anyKeyDown)
+			{
+				Application.LoadLevel (Application.loadedLevel);
+			}
 		}
 	}
 
@@ -138,6 +164,24 @@ public class BoardCont : MonoBehaviour
 		{
 			Destroy (clone);
 		}
+	}
+	
+	public static bool isCheckmated (GameObject king)
+	{
+		foreach (GameObject piece in BoardCont.pieces)
+		{
+			if (piece != null && piece != king && piece.GetComponent<PieceCont> ().color == king.GetComponent<PieceCont> ().color)
+			{
+				List<Vector2> moves = piece.GetComponent<PieceCont> ().CheckValidMoves (false);
+				if (moves.Count > 0)
+				{
+					return false;
+				}
+			}
+		}
+		List<Vector2> kingMoves = king.GetComponent<PieceCont> ().CheckValidMoves (false);
+		king.GetComponent<PieceCont> ().CheckKingMoves (kingMoves);
+		return kingMoves.Count == 0;
 	}
 
 	// If any elements in additional are missing from target, they're added into it.
