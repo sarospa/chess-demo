@@ -11,18 +11,26 @@ public class CheckAnalysis : MonoBehaviour
 		controller = this.gameObject.GetComponent<PieceCont> ();
 	}
 
-	public List<List<Vector2>> findThreats ()
+	// If forThreatDisplay is true, adds the king's location to the list and not
+	// the attacking piece's.
+	public List<List<Vector2>> findThreats (bool forThreatDisplay)
 	{
 		Vector2 loc = controller.GetLoc ();
 		List<List<Vector2>> list = new List<List<Vector2>> ();
-		seekPawns (loc, list);
-		seekKnights (loc, list);
-		seekRooks (loc, list);
-		seekBishops (loc, list);
+		seekPawns (loc, list, forThreatDisplay);
+		seekKnights (loc, list, forThreatDisplay);
+		seekRooks (loc, list, forThreatDisplay);
+		seekBishops (loc, list, forThreatDisplay);
+		if (forThreatDisplay && list.Count > 0)
+		{
+			List<Vector2> kingLoc = new List<Vector2> ();
+			kingLoc.Add (loc);
+			list.Add (kingLoc);
+		}
 		return list;
 	}
 	
-	private void seekPawns (Vector2 loc, List<List<Vector2>> list)
+	private void seekPawns (Vector2 loc, List<List<Vector2>> list, bool forThreatDisplay)
 	{
 		int yDir;
 		if (controller.color == "white")
@@ -42,13 +50,16 @@ public class CheckAnalysis : MonoBehaviour
 			if (cell == "enemy" && BoardCont.pieces[x, y].GetComponent<PieceCont> ().pieceType == "pawn")
 			{
 				List<Vector2> pawn = new List<Vector2> ();
-				pawn.Add (new Vector2 (x, y));
+				if (!forThreatDisplay)
+				{
+					pawn.Add (new Vector2 (x, y));
+				}
 				list.Add (pawn);
 			}
 		}
 	}
 	
-	private void seekKnights (Vector2 loc, List<List<Vector2>> list)
+	private void seekKnights (Vector2 loc, List<List<Vector2>> list, bool forThreatDisplay)
 	{
 		Vector2[] knightMoves =  {new Vector2 (1, 2), new Vector2 (2, 1), new Vector2 (-1, 2), new Vector2 (-2, 1)
 									, new Vector2(1, -2), new Vector2 (2, -1), new Vector2 (-1, -2), new Vector2 (-2, -1)};
@@ -60,25 +71,28 @@ public class CheckAnalysis : MonoBehaviour
 			if (cell == "enemy" && BoardCont.pieces[x, y].GetComponent<PieceCont> ().pieceType == "knight")
 			{
 				List<Vector2> knight = new List<Vector2> ();
-				knight.Add (new Vector2 (x, y));
+				if (!forThreatDisplay)
+				{
+					knight.Add (new Vector2 (x, y));
+				}
 				list.Add (knight);
 			}
 		}
 	}
 	
-	private void seekRooks (Vector2 loc, List<List<Vector2>> list)
+	private void seekRooks (Vector2 loc, List<List<Vector2>> list, bool forThreatDisplay)
 	{
-		List<Vector2> rook1 = seekRook (loc, true, true);
-		List<Vector2> rook2 = seekRook (loc, true, false);
-		List<Vector2> rook3 = seekRook (loc, false, true);
-		List<Vector2> rook4 = seekRook (loc, false, false);
+		List<Vector2> rook1 = seekRook (loc, true, true, forThreatDisplay);
+		List<Vector2> rook2 = seekRook (loc, true, false, forThreatDisplay);
+		List<Vector2> rook3 = seekRook (loc, false, true, forThreatDisplay);
+		List<Vector2> rook4 = seekRook (loc, false, false, forThreatDisplay);
 		if (rook1 != null) list.Add (rook1);
 		if (rook2 != null) list.Add (rook2);
 		if (rook3 != null) list.Add (rook3);
 		if (rook4 != null) list.Add (rook4);
 	}
 	
-	private List<Vector2> seekRook (Vector2 loc, bool horizontal, bool positive)
+	private List<Vector2> seekRook (Vector2 loc, bool horizontal, bool positive, bool forThreatDisplay)
 	{
 		int dir;
 		int xDir;
@@ -113,6 +127,10 @@ public class CheckAnalysis : MonoBehaviour
 				PieceCont otherCont = BoardCont.pieces[checkX, checkY].GetComponent<PieceCont> ();
 				if (cell == "enemy" && (otherCont.pieceType == "rook" || otherCont.pieceType == "queen"))
 				{
+					if (forThreatDisplay)
+					{
+						threatMoves.Remove (otherCont.GetLoc ());
+					}
 					return threatMoves;
 				}
 				else
@@ -127,19 +145,19 @@ public class CheckAnalysis : MonoBehaviour
 		}
 	}
 	
-	private void seekBishops (Vector2 loc, List<List<Vector2>> list)
+	private void seekBishops (Vector2 loc, List<List<Vector2>> list, bool forThreatDisplay)
 	{
-		List<Vector2> bishop1 = seekBishop(loc, true, true);
-		List<Vector2> bishop2 = seekBishop(loc, true, false);
-		List<Vector2> bishop3 = seekBishop(loc, false, true);
-		List<Vector2> bishop4 = seekBishop(loc, false, false);
+		List<Vector2> bishop1 = seekBishop(loc, true, true, forThreatDisplay);
+		List<Vector2> bishop2 = seekBishop(loc, true, false, forThreatDisplay);
+		List<Vector2> bishop3 = seekBishop(loc, false, true, forThreatDisplay);
+		List<Vector2> bishop4 = seekBishop(loc, false, false, forThreatDisplay);
 		if (bishop1 != null) list.Add (bishop1);
 		if (bishop2 != null) list.Add (bishop2);
 		if (bishop3 != null) list.Add (bishop3);
 		if (bishop4 != null) list.Add (bishop4);
 	}
 
-	private List<Vector2> seekBishop (Vector2 loc, bool up, bool right)
+	private List<Vector2> seekBishop (Vector2 loc, bool up, bool right, bool forThreatDisplay)
 	{
 		int xDir;
 		int yDir;
@@ -171,6 +189,10 @@ public class CheckAnalysis : MonoBehaviour
 				PieceCont otherCont = BoardCont.pieces[checkX, checkY].GetComponent<PieceCont> ();
 				if (cell == "enemy" && (otherCont.pieceType == "bishop" || otherCont.pieceType == "queen"))
 				{
+					if (forThreatDisplay)
+					{
+						threatMoves.Remove (otherCont.GetLoc ());
+					}
 					return threatMoves;
 				}
 				else

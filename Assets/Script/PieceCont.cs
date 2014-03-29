@@ -103,6 +103,7 @@ public class PieceCont : MonoBehaviour {
 				moved = true;
 				BoardCont.whiteTurn = (color != "white");
 				GameObject[] kings = GameObject.FindGameObjectsWithTag ("King");
+				board.GetComponent<BoardCont> ().RemoveThreats ();
 				foreach (GameObject king in kings)
 				{
 					if (BoardCont.whiteTurn == (king.GetComponent<PieceCont> ().color == "white"))
@@ -110,6 +111,14 @@ public class PieceCont : MonoBehaviour {
 						if (BoardCont.isCheckmated (king))
 						{
 							BoardCont.gameOver = true;
+						}
+						else
+						{
+							List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats (true);
+							foreach (List<Vector2> threat in threats)
+							{
+								board.GetComponent<BoardCont> ().PlaceThreats (threat);
+							}
 						}
 					}
 				}
@@ -327,7 +336,7 @@ public class PieceCont : MonoBehaviour {
 			{
 				if (king.GetComponent<PieceCont> ().color == this.color)
 				{
-					List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats();
+					List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats(false);
 					foreach (List<Vector2> threat in threats)
 					{
 						BoardCont.IntersectLists (nextMoves, threat);
@@ -354,7 +363,7 @@ public class PieceCont : MonoBehaviour {
 				{
 					if (king.GetComponent<PieceCont> ().color == this.color)
 					{
-						List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats();
+						List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats(false);
 						foreach (List<Vector2> threat in threats)
 						{
 							BoardCont.SubtractLists (victimSpot, threat);
@@ -377,7 +386,7 @@ public class PieceCont : MonoBehaviour {
 				{
 					if (king.GetComponent<PieceCont> ().color == this.color)
 					{
-						List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats();
+						List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats(false);
 						foreach (List<Vector2> threat in threats)
 						{
 							BoardCont.SubtractLists (victimSpot, threat);

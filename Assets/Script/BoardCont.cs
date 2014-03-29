@@ -19,6 +19,7 @@ public class BoardCont : MonoBehaviour
 	public GameObject whiteKing;
 	public GameObject blackKing;
 	public GameObject highlight;
+	public GameObject threat;
 	public const float corner = -0.42f;
 	public const float squareSize = 0.12f;
 	public const float pieceScale = 0.9f;
@@ -31,6 +32,7 @@ public class BoardCont : MonoBehaviour
 	public static float xScale;
 	public static float yScale;
 	private List<GameObject> highlightSquares = new List<GameObject> ();
+	private List<GameObject> threatSquares = new List<GameObject> ();
 
 	void Start ()
 	{
@@ -161,6 +163,26 @@ public class BoardCont : MonoBehaviour
 	public void RemoveHighlights ()
 	{
 		foreach (GameObject clone in highlightSquares)
+		{
+			Destroy (clone);
+		}
+	}
+	
+	public void PlaceThreats (List<Vector2> moves)
+	{
+		foreach (Vector2 move in moves)
+		{
+			GameObject clone = (GameObject)Instantiate (threat);
+			clone.transform.parent = this.transform;
+			clone.transform.localPosition = CellLoc ((int)move.x, (int)move.y, -2.75f);
+			clone.transform.localScale = new Vector3 (squareSize, squareSize, 1);
+			threatSquares.Add (clone);
+		}
+	}
+	
+	public void RemoveThreats ()
+	{
+		foreach (GameObject clone in threatSquares)
 		{
 			Destroy (clone);
 		}
