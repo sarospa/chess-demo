@@ -75,8 +75,18 @@ public class PieceCont : MonoBehaviour {
 				{
 					Destroy (BoardCont.pieces[x, y]);
 				}
-				BoardCont.pieces[xLoc, yLoc] = null;
-				BoardCont.PlacePiece (this.gameObject, x, y);
+				// Moves rook on queen side castle.
+				if (x == xLoc-2 && y == yLoc && this.pieceType == "king")
+				{
+					BoardCont.PlacePiece (BoardCont.pieces[xLoc-4, yLoc], xLoc-1, yLoc);
+					BoardCont.pieces[xLoc-4, yLoc] = null;
+				}
+				// Moves rook on king side castle.
+				else if (x == xLoc+2 && y == yLoc && this.pieceType == "king")
+				{
+					BoardCont.PlacePiece (BoardCont.pieces[xLoc+3, yLoc], xLoc+1, yLoc);
+					BoardCont.pieces[xLoc+3, yLoc] = null;
+				}
 				if (this.pieceType == "pawn")
 				{
 					// Check if pawn is now vulnerable to en passant.
@@ -89,7 +99,13 @@ public class PieceCont : MonoBehaviour {
 					{
 						Destroy (BoardCont.pieces[x, y-dir]);
 					}
-					else if (CheckSpace (x, y+dir) == "invalid")
+				}
+				BoardCont.pieces[xLoc, yLoc] = null;
+				BoardCont.PlacePiece (this.gameObject, x, y);
+				if (this.pieceType == "pawn")
+				{
+					// If the pawn is at the end of the board, promote to queen.
+					if (CheckSpace (x, y+dir) == "invalid")
 					{
 						BoardCont boardController = board.GetComponent<BoardCont> ();
 						if (this.color == "white")
@@ -102,18 +118,6 @@ public class PieceCont : MonoBehaviour {
 						}
 						Destroy (this.gameObject);
 					}
-				}
-				// Moves rook on queen side castle.
-				if (x == xLoc-2 && y == yLoc && this.pieceType == "king")
-				{
-					BoardCont.PlacePiece (BoardCont.pieces[xLoc-4, yLoc], xLoc-1, yLoc);
-					BoardCont.pieces[xLoc-4, yLoc] = null;
-				}
-				// Moves rook on king side castle.
-				else if (x == xLoc+2 && y == yLoc && this.pieceType == "king")
-				{
-					BoardCont.PlacePiece (BoardCont.pieces[xLoc+3, yLoc], xLoc+1, yLoc);
-					BoardCont.pieces[xLoc+3, yLoc] = null;
 				}
 				moved = true;
 				BoardCont.whiteTurn = (color != "white");
