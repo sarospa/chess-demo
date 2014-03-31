@@ -130,7 +130,7 @@ public class BoardCont : MonoBehaviour
 		clone.transform.localScale = new Vector3 (squareSize, squareSize, 1);
 	}
 
-	void CreatePiece (GameObject piece, int x, int y)
+	public void CreatePiece (GameObject piece, int x, int y)
 	{
 		GameObject clone = (GameObject)Instantiate (piece);
 		clone.transform.parent = this.transform;

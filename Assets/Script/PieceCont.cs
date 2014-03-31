@@ -75,15 +75,33 @@ public class PieceCont : MonoBehaviour {
 				{
 					Destroy (BoardCont.pieces[x, y]);
 				}
-				// Check if pawn is now vulnerable to en passant.
-				if (this.pieceType == "pawn" && Mathf.Abs (y - yLoc) == 2)
+				BoardCont.pieces[xLoc, yLoc] = null;
+				BoardCont.PlacePiece (this.gameObject, x, y);
+				if (this.pieceType == "pawn")
 				{
-					this.passantVulnerable = true;
-				}
-				// If en passant was performed, destroy the enemy pawn.
-				if (this.pieceType == "pawn" && Mathf.Abs (x - xLoc) == 1 && Mathf.Abs (y - yLoc) == 1 && CheckSpace (x, y) == "empty")
-				{
-					Destroy (BoardCont.pieces[x, y-dir]);
+					// Check if pawn is now vulnerable to en passant.
+					if (Mathf.Abs (y - yLoc) == 2)
+					{
+						this.passantVulnerable = true;
+					}
+					// If en passant was performed, destroy the enemy pawn.
+					else if (Mathf.Abs (x - xLoc) == 1 && Mathf.Abs (y - yLoc) == 1 && CheckSpace (x, y) == "empty")
+					{
+						Destroy (BoardCont.pieces[x, y-dir]);
+					}
+					else if (CheckSpace (x, y+dir) == "invalid")
+					{
+						BoardCont boardController = board.GetComponent<BoardCont> ();
+						if (this.color == "white")
+						{
+							boardController.CreatePiece (boardController.whiteQueen, x, y);
+						}
+						else
+						{
+							boardController.CreatePiece (boardController.blackQueen, x, y);
+						}
+						Destroy (this.gameObject);
+					}
 				}
 				// Moves rook on queen side castle.
 				if (x == xLoc-2 && y == yLoc && this.pieceType == "king")
@@ -97,9 +115,6 @@ public class PieceCont : MonoBehaviour {
 					BoardCont.PlacePiece (BoardCont.pieces[xLoc+3, yLoc], xLoc+1, yLoc);
 					BoardCont.pieces[xLoc+3, yLoc] = null;
 				}
-				BoardCont.pieces[x, y] = this.gameObject;
-				BoardCont.pieces[xLoc, yLoc] = null;
-				BoardCont.PlacePiece (this.gameObject, x, y);
 				moved = true;
 				BoardCont.whiteTurn = (color != "white");
 				GameObject[] kings = GameObject.FindGameObjectsWithTag ("King");
@@ -111,14 +126,22 @@ public class PieceCont : MonoBehaviour {
 						if (BoardCont.isCheckmated (king))
 						{
 							BoardCont.gameOver = true;
-						}
-						else
-						{
-							List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats (true);
-							foreach (List<Vector2> threat in threats)
+							// Lights up squares threatened by all the winning player's pieces.
+							// It seemed a bit too messy-looking to me.
+							/*List<Vector2> threats = new List<Vector2> ();
+							foreach (GameObject piece in BoardCont.pieces)
 							{
-								board.GetComponent<BoardCont> ().PlaceThreats (threat);
+								if (piece != null && king.GetComponent<PieceCont> ().color != piece.GetComponent<PieceCont> ().color)
+								{
+									BoardCont.MergeLists (threats, piece.GetComponent<PieceCont> ().CheckValidMoves (false));
+								}
 							}
+							board.GetComponent<BoardCont> ().PlaceThreats (threats);*/
+						}
+						List<List<Vector2>> threats = king.GetComponent<CheckAnalysis> ().findThreats (true);
+						foreach (List<Vector2> threat in threats)
+						{
+							board.GetComponent<BoardCont> ().PlaceThreats (threat);
 						}
 					}
 				}
