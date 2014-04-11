@@ -1,4 +1,4 @@
 chess-demo
 ==========
 
-Basic demonstration of Unity.
+Basic chess simulator to demonstrate knowledge of Unity.
